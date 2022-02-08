@@ -6,7 +6,7 @@ const statement = /\{% ([\s\S]*?) %\}/g;
 const expression = /\{\{ ([\s\S]*?) \}\}/g;
 const comment = /\{# ([\s\S]*?) #\}/g;
 
-const preprocess = (text, filename) => [
+const preprocess = (text) => [
     text
         // comment
         .replace(comment, '/* $1 */')

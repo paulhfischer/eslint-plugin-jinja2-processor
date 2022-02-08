@@ -1,6 +1,6 @@
 {
     "name": "eslint-plugin-jinja2-processor",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "ESLint-plugin to enable linting of Jinja-templated files.",
     "main": "src/index.js",
     "scripts": {
@@ -12,6 +12,15 @@
         "url": "git+https://github.com/paulhfischer/eslint-plugin-jinja2-processor"
     },
     "license": "GPL-3.0",
+    "eslintConfig": {
+        "extends": [
+            "@paulhfischer/eslint-config-javascript"
+        ],
+        "env": {
+            "mocha": true
+        }
+    },
+    "prettier": "@paulhfischer/prettier-config",
     "peerDependencies": {
         "eslint": "^8.0.0"
     },
