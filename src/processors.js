@@ -30,4 +30,5 @@ const preprocess = (text) => [
 
 module.exports = {
     preprocess,
+    supportsAutofix: true,
 };

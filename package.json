@@ -1,6 +1,6 @@
 {
     "name": "eslint-plugin-jinja2-processor",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "description": "ESLint-plugin to enable linting of Jinja-templated files.",
     "main": "src/index.js",
     "scripts": {
