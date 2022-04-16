@@ -90,3 +90,102 @@ describe('preprocessor', () => {
         assert.equal(processors.preprocess(html), expected);
     });
 });
+
+describe('postprocessor', () => {
+    it('should retransform fixes', () => {
+        const original =
+            "const foo = ['{{ deadbeef_deadbeef_deadbeef }}', '{% foo_bar_baz_foo_bar_baz %}', '{{ foo }}{# should work #}'];";
+        const messages = [
+            {
+                line: 1,
+                endLine: 1,
+                column: 1,
+                message: 'foo',
+                ruleId: 'bar',
+                fix: {
+                    range: [13, 111],
+                    text: "[\n    '   deadbeef_deadbeef_deadbeef   ',\n    '/* foo_bar_baz_foo_bar_baz */',\n    '   foo   /* should work */'\n]",
+                },
+            },
+        ];
+        assert.equal(
+            processors.preprocess(original),
+            "const foo = ['   deadbeef_deadbeef_deadbeef   ', '/* foo_bar_baz_foo_bar_baz */', '   foo   /* should work */'];",
+        );
+        assert.deepEqual(processors.postprocess(messages), [
+            {
+                line: 1,
+                endLine: 1,
+                column: 1,
+                message: 'foo',
+                ruleId: 'bar',
+                fix: {
+                    range: [13, 111],
+                    text: "[\n    '{{ deadbeef_deadbeef_deadbeef }}',\n    '{% foo_bar_baz_foo_bar_baz %}',\n    '{{ foo }}{# should work #}'\n]",
+                },
+            },
+        ]);
+    });
+    it('should not modify non-fixables', () => {
+        const messages = [
+            {
+                line: 1,
+                endLine: 1,
+                column: 1,
+                message: 'foo',
+                ruleId: 'bar',
+            },
+        ];
+        assert.deepEqual(processors.postprocess(messages), messages);
+    });
+    it('should flatten', () => {
+        const messages = [
+            {
+                line: 1,
+                endLine: 1,
+                column: 1,
+                message: 'foo',
+                ruleId: 'bar',
+            },
+            [
+                {
+                    line: 2,
+                    endLine: 2,
+                    column: 2,
+                    message: 'foo2',
+                    ruleId: 'bar2',
+                },
+                {
+                    line: 3,
+                    endLine: 3,
+                    column: 3,
+                    message: 'foo3',
+                    ruleId: 'bar3',
+                },
+            ],
+        ];
+        assert.deepEqual(processors.postprocess(messages), [
+            {
+                line: 1,
+                endLine: 1,
+                column: 1,
+                message: 'foo',
+                ruleId: 'bar',
+            },
+            {
+                line: 2,
+                endLine: 2,
+                column: 2,
+                message: 'foo2',
+                ruleId: 'bar2',
+            },
+            {
+                line: 3,
+                endLine: 3,
+                column: 3,
+                message: 'foo3',
+                ruleId: 'bar3',
+            },
+        ]);
+    });
+});
