@@ -1,31 +1,55 @@
-const ifStatement = /\{% (if[\s\S]*?) %\}/g;
-const elifStatement = /\{% (elif[\s\S]*?) %\}/g;
-const elseStatement = /\{% (else) %\}/g;
-const endifStatement = /\{% (endif) %\}/g;
-const statement = /\{% ([\s\S]*?) %\}/g;
-const expression = /\{\{ ([\s\S]*?) \}\}/g;
-const comment = /\{# ([\s\S]*?) #\}/g;
+const ifStatementRegex = /\{% (?:if ([\s\S]*?)) %\}/g;
+const elifStatementRegex = /\{% (?:elif ([\s\S]*?)) %\}/g;
+const elseStatementRegex = /\{% else %\}/g;
+const endifStatementRegex = /\{% endif %\}/g;
+const statementRegex = /\{% ([\s\S]*?) %\}/g;
+const expressionRegex = /\{\{ ([\s\S]*?) \}\}/g;
+const commentRegex = /\{# ([\s\S]*?) #\}/g;
+const stringRegex = /(['"`])(.*?)\1/g;
+const quoteRegex = /['"`]/g;
 
 const preprocess = (text) => [
     text
         // comment
-        .replace(comment, '/* $1 */')
+        .replace(commentRegex, (comment, content) => {
+            return `/* ${content} */`;
+        })
 
         // if-statement
-        .replace(ifStatement, '(/*$1 */')
-        .replace(elseStatement, ',/*$1 */')
-        .replace(elifStatement, ',/*$1 */')
-        .replace(endifStatement, '/*$1 */)')
+        .replace(ifStatementRegex, (ifStatement, content) => {
+            return `(/*if ${content} */`;
+        })
+        .replace(elseStatementRegex, () => {
+            return `,/*else */`;
+        })
+        .replace(elifStatementRegex, (elifStatement, content) => {
+            return `,/*elif ${content} */`;
+        })
+        .replace(endifStatementRegex, () => {
+            return `/*endif */)`;
+        })
 
-        // statement
-        .replace(statement, '/* $1 */')
+        // other statements
+        .replace(statementRegex, (statement, content) => {
+            return `/* ${content} */`;
+        })
 
         // expression in string
-        .replace(expression, (match) => match.replace(/['"`]/g, ' '))
-        .replace(/(['"`])(.*?)\1/g, (match) => match.replace(expression, '   $1   '))
+        // remove quotes in expressions
+        .replace(expressionRegex, (expression) => {
+            return expression.replace(quoteRegex, ' ');
+        })
+        // replace curly braces of expressions with whitespaces if in string
+        .replace(stringRegex, (string) =>
+            string.replace(expressionRegex, (expression, content) => {
+                return `   ${content}   `;
+            }),
+        )
 
         // expression
-        .replace(expression, (match) => `/${'0'.repeat(match.length - 2)}/`),
+        .replace(expressionRegex, (expression) => {
+            return `/${'0'.repeat(expression.length - 2)}/`;
+        }),
 ];
 
 module.exports = {
