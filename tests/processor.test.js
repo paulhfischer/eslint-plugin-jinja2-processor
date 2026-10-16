@@ -1,5 +1,6 @@
-const assert = require('assert');
-const processors = require('../src/processors');
+const assert = require('node:assert');
+const { describe, it } = require('node:test');
+const processors = require('../src/processor');
 
 const html = `
 <script>
@@ -63,6 +64,22 @@ describe('preprocessor', () => {
         assert.equal(
             processors.preprocess('{% if foo %} hello {% elif bar %} world {% endif %}'),
             '(/*if foo */ hello ,/*elif bar */ world /*endif */)',
+        );
+    });
+    it('should replace if-statement wrapping statements', () => {
+        assert.equal(
+            processors.preprocess(
+                '{% if foo %}\n    a();\n{% elif bar %}\n    b();\n{% else %}\n    c();\n{% endif %}',
+            ),
+            '/*if foo */\n    a();\n/*elif bar */\n    b();\n/*else */\n    c();\n/*endif */',
+        );
+    });
+    it('should replace nested if-statements', () => {
+        assert.equal(
+            processors.preprocess(
+                '{% if foo %}\n    a = {% if bar %} 1 {% else %} 2 {% endif %};\n{% endif %}',
+            ),
+            '/*if foo */\n    a = (/*if bar */ 1 ,/*else */ 2 /*endif */);\n/*endif */',
         );
     });
     it('should replace statement', () => {
@@ -187,5 +204,34 @@ describe('postprocessor', () => {
                 ruleId: 'bar3',
             },
         ]);
+    });
+    it('should restore quotes of expressions in strings', () => {
+        processors.preprocess("const c = 'hello {{ name['first'] }}!';");
+        const [message] = processors.postprocess([
+            { ruleId: 'bar', fix: { range: [0, 1], text: "'hello    name[ first ]   !'" } },
+        ]);
+        assert.equal(message.fix.text, "'hello {{ name['first'] }}!'");
+    });
+    it('should restore all occurrences', () => {
+        processors.preprocess('{# foo #} a; {# foo #} b;');
+        const [message] = processors.postprocess([
+            { ruleId: 'bar', fix: { range: [0, 1], text: '/* foo */ a;\n/* foo */ b;' } },
+        ]);
+        assert.equal(message.fix.text, '{# foo #} a;\n{# foo #} b;');
+    });
+    it('should keep special replacement patterns', () => {
+        processors.preprocess("{# costs $& and $' #}");
+        const [message] = processors.postprocess([
+            { ruleId: 'bar', fix: { range: [0, 1], text: "/* costs $& and $' */" } },
+        ]);
+        assert.equal(message.fix.text, "{# costs $& and $' #}");
+    });
+    it('should not mix up replacements of different files', () => {
+        processors.preprocess('{# foo #}', 'a.html');
+        const [message] = processors.postprocess(
+            [{ ruleId: 'bar', fix: { range: [0, 1], text: '/* foo */' } }],
+            'b.html',
+        );
+        assert.equal(message.fix.text, '/* foo */');
     });
 });

@@ -1,10 +1,17 @@
 {
     "name": "eslint-plugin-jinja2-processor",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "description": "ESLint-plugin to enable linting of Jinja-templated files.",
+    "keywords": [
+        "eslint",
+        "eslintplugin",
+        "eslint-plugin",
+        "jinja",
+        "jinja2"
+    ],
     "main": "src/index.js",
     "scripts": {
-        "test": "mocha tests/**/*.js"
+        "test": "node --test tests/"
     },
     "author": "Paul Fischer <paul.fischer@mailbox.org>",
     "repository": {
@@ -12,22 +19,14 @@
         "url": "git+https://github.com/paulhfischer/eslint-plugin-jinja2-processor"
     },
     "license": "GPL-3.0",
-    "eslintConfig": {
-        "extends": [
-            "@paulhfischer/eslint-config-javascript"
-        ],
-        "env": {
-            "mocha": true
-        }
-    },
     "prettier": "@paulhfischer/prettier-config",
     "peerDependencies": {
-        "eslint": "^8.0.0"
-    },
-    "devDependencies": {
-        "mocha": "^9.2.0"
+        "eslint": ">=9.0.0"
     },
     "files": [
         "src"
-    ]
+    ],
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || >=24"
+    }
 }
